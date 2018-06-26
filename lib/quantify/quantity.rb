@@ -81,18 +81,18 @@ module Quantify
         string = words.join(" ")
 
         # Parse string for unit references
-        unit, remainder = Unit.parse(string, :iterative => true, :remainder => true) 
+        unit, remainder = Unit.parse(string, :iterative => true, :remainder => true)
         unit, remainder = Unit.dimensionless, string if unit.nil?
         remainders << remainder
 
         # Instantiate quantity using value and unit
         Quantity.new(value,unit)
-          
+
       end.compact
 
       return [quantities, remainders] if options[:remainder] == true
       return quantities
-      
+
     rescue Quantify::Exceptions::InvalidArgumentError
       raise Quantify::Exceptions::QuantityParseError, "Cannot parse string into value and unit"
     end
@@ -104,7 +104,7 @@ module Quantify
     def self.auto_consolidate_units=(true_or_false)
       @auto_consolidate_units = true_or_false
     end
-    
+
     def self.auto_consolidate_units?
       @auto_consolidate_units.nil? ? false : @auto_consolidate_units
     end
@@ -118,7 +118,7 @@ module Quantify
 
       return false
     end
-    
+
     public
 
     attr_reader :value, :unit
@@ -141,6 +141,11 @@ module Quantify
       end
     end
 
+    # shortcut accessor that allows Quantity to be used as ActiveRecord#composed_of object
+    def unit_symbol
+      @unit.symbol
+    end
+
     # Initialize a new Quantity object. Two arguments are required: a value and
     # a unit. The unit can be a an instance of Unit::Base or the label, name, symbol or
     # JScience reference of a known (or derivable through known units and prefixes)
@@ -152,7 +157,7 @@ module Quantify
       else
         @value = nil
       end
-      
+
       if unit
         @unit = Unit.for(unit)
       else
@@ -177,9 +182,9 @@ module Quantify
     # Returns a string representation of the quantity, using the unit symbol
     def to_s format=:symbol
       if format == :name
-        unit_string = @value == 1 || @value == -1 ? @unit.name : @unit.pluralized_name 
+        unit_string = @value == 1 || @value == -1 ? @unit.name : @unit.pluralized_name
       else
-        unit_string = @unit.send format 
+        unit_string = @unit.send format
       end
 
       string =  "#{@value}"
@@ -187,7 +192,7 @@ module Quantify
 
       string
     end
-    
+
     def inspect
       to_s
     end
@@ -201,7 +206,7 @@ module Quantify
     #   1000.kilogram.to(:tonne).to_s                   #=> "1 t"
     #
     # For compound units, it is permissable to pass in units which are same dimension of at
-    # least one base unit. 
+    # least one base unit.
     #
     # #method_missing provides some syntactic sugar for the new unit to
     # be provided as part of the method name, based around /to_(<unit>)/, e.g.
@@ -224,10 +229,10 @@ module Quantify
         Quantity.new(@value,@unit).convert_compound_unit_to_non_equivalent_unit! new_unit
 
       else
-        raise Exceptions::InvalidArgumentError, "Cannot convert #{self.unit.to_s} quantity into #{new_unit.to_s}. Units are incompatible"
-      end      
+        raise Exceptions::InvalidArgumentError, "Cannot convert #{self.unit.to_s}:#{self.unit.symbol} quantity into #{new_unit.to_s}:#{new_unit.symbol}. Units are incompatible"
+      end
     end
-    
+
     # Converts a quantity to the equivalent quantity using only SI units
     def to_si
       if @unit.is_compound_unit?
@@ -240,7 +245,7 @@ module Quantify
         self.to(@unit.si_unit)
       end
     end
-    
+
     def pow!(power)
       raise Exceptions::InvalidArgumentError, "Argument must be an integer" unless power.is_a? Integer
 
@@ -318,7 +323,7 @@ module Quantify
     def round!(decimal_places=0)
       factor = ( decimal_places == 0 ? 1 : 10.0 ** decimal_places )
       @value = (@value * factor).round / factor
-      
+
       return self
     end
 
@@ -333,7 +338,7 @@ module Quantify
     def <=>(other)
       raise Exceptions::InvalidArgumentError, "Argument must be another quantity" unless other.is_a? Quantity
       raise Exceptions::InvalidArgumentError, "Argument must be of same dimensions as self" unless other.unit.is_alternative_for?(unit)
-      
+
       return 0 if @value.nil? && (other.nil? || other.value.nil?)
 
       other = other.to @unit
@@ -354,12 +359,12 @@ module Quantify
 
     # Clone self and explicitly clone the associated Unit object located
     # at @unit.
-    # 
+    #
     def initialize_copy(source)
       super
       instance_variable_set("@unit", @unit.clone)
     end
-    
+
     # Quantities must be of the same dimension in order to operate. If they are
     # represented by different units (but represent the same physical quantity)
     # the second quantity is converted into the unit belonging to the first unit
@@ -391,13 +396,13 @@ module Quantify
         @unit = @unit.send(operator,other.unit).or_equivalent
         @unit.consolidate_base_units! if @unit.is_compound_unit? && Quantity.auto_consolidate_units?
         @value = @value.send(operator,other.value)
-        
+
         return self
       else
         raise Quantify::Exceptions::InvalidArgumentError, "Cannot multiply or divide a Quantity by a non-Quantity or non-Numeric object"
       end
     end
-    
+
     # Conversion where both units (including compound units) are of precisely
     # equivalent dimensions, i.e. direct alternatives for one another. Where
     # previous unit is a compound unit, new unit must be cancelled by all original
@@ -431,10 +436,10 @@ module Quantify
         quantity.multiply!(factor).cancel_base_units!(base.unit)
       end
     end
-    
+
     def convert_compound_unit_to_si!
       until @unit.is_base_quantity_si_unit? do
-        
+
         unit = @unit.base_units.find do |base|
           !base.is_base_quantity_si_unit?
         end.unit

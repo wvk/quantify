@@ -1,23 +1,23 @@
 module Quantify
   module Exceptions
 
-    class QuantityParseError < Exception
+    class QuantityParseError < RuntimeError
     end
 
-    class InvalidObjectError < Exception
+    class InvalidObjectError < RuntimeError
     end
 
-    class InvalidUnitError < Exception
+    class InvalidUnitError < RuntimeError
     end
 
-    class InvalidDimensionError < Exception
+    class InvalidDimensionError < RuntimeError
     end
 
-    class InvalidPhysicalQuantityError < Exception
+    class InvalidPhysicalQuantityError < RuntimeError
     end
 
-    class InvalidArgumentError < Exception
+    class InvalidArgumentError < RuntimeError
     end
-    
+
   end
 end

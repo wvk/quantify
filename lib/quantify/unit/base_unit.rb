@@ -17,7 +17,7 @@ module Quantify
       def self.construct_and_load(unit,&block)
         self.construct(unit, &block).load
       end
-      
+
       def self.initialize_prefixed_version(prefix,unit)
 
         prefix, unit = Prefix.for(prefix), Unit.for(unit)
@@ -79,7 +79,7 @@ module Quantify
       def self.configure(&block)
         class_eval(&block) if block
       end
-      
+
       attr_reader :name, :symbol, :label, :j_science, :factor, :dimensions
       attr_reader :acts_as_alternative_unit, :acts_as_equivalent_unit
       attr_accessor :base_unit, :prefix
@@ -309,7 +309,7 @@ module Quantify
       def pluralized_name
         @name.pluralize
       end
-      
+
       # Determine if the unit represents one of the base quantities, length,
       # mass, time, temperature, etc.
       #
@@ -418,7 +418,7 @@ module Quantify
       def is_alternative_for?(other)
         other.dimensions == @dimensions
       end
-      
+
       # List the alternative units for self, i.e. the other units which share
       # the same dimensions.
       #
@@ -496,7 +496,7 @@ module Quantify
 
       # Raise a unit to a power. This results in the generation of a compound
       # unit, e.g. m^3.
-      # 
+      #
       # In the event that the new unit represents a known unit, the non-compound
       # representation is returned (i.e. of the SI or NonSI class).
       #
@@ -561,10 +561,10 @@ module Quantify
       end
 
       private
-      
+
       # Clone self and explicitly clone the associated Dimensions object located
       # at @dimensions.
-      # 
+      #
       # This enables full or 'deep' copies of the already initialized units to be
       # retrieved and manipulated without corrupting the known unit representations.
       # (self.clone makes only a shallow copy, i.e. clones attributes but not
@@ -574,9 +574,9 @@ module Quantify
         super
         instance_variable_set("@dimensions", @dimensions.clone)
       end
-      
+
       def self.block_for_prefixed_version(prefix,unit)
-        return Proc.new do |new_unit| 
+        return Proc.new do |new_unit|
           new_unit.base_unit  = unit.clone
           new_unit.prefix     = prefix
           new_unit.dimensions = unit.dimensions.clone
@@ -593,9 +593,9 @@ module Quantify
       #  Unit.metre.to_kilo
       #
       # is equivalent to Unit.metre.with_prefix :kilo.
-      # 
+      #
       #  Unit.m.alternatives_by_name
-      #  
+      #
       # is equaivalent to Unit.m.alternatives :name
       #
       def method_missing(method, *args, &block)
