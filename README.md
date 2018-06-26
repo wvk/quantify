@@ -5,7 +5,7 @@ A gem to support physical quantities and unit conversions in Ruby
 
 Author: Andrew Berkeley (andrew.berkeley.is@googlemail.com)
 
-Homepage: https://github.com/spatchcock/quantify 
+Homepage: https://github.com/spatchcock/quantify
 
 
 Quick introduction
@@ -53,7 +53,7 @@ _.value = nil                       #=> nil
 Quantity.new(100)                   #=> <Quantify::Quantity:0xb7332bbc ... >
 _.unit = nil                        #=> "unity" #== 'unitless' unit
 ```
-    
+
 General introduction
 --------------------
 
@@ -111,7 +111,7 @@ mass.unit.alternatives(:name)         #=> [ "kilogram",
                                       #     "stone",
                                       #     "tonne",
                                       #     "unified atomic mass" ]
- 
+
 mass.unit.si_unit                     #=> 'kg'
 
 mass.unit.dimensions                  #=> <Quantify::Dimensions:0xb75467c8 ... >
@@ -123,13 +123,13 @@ Convert a quantity to a different unit
 ```ruby
 energy = 100.kWh                      #=> <Quantify::Quantity:0xb7332bbc ... >
 energy.to_s                           #=> "100 kilowatt hours"
-  
+
 new_energy = energy.to_megajoules     #=> <Quantify::Quantity:0xb7332bbc ... >
 new_energy.to_s                       #=> "360.0 MJ"
-  
+
 new_energy = energy.to_MJ             #=> <Quantify::Quantity:0xb7332bbc ... >
 new_energy.to_s                       #=> "360.0 MJ"
-  
+
 new_energy = energy.to(:MJ)           #=> <Quantify::Quantity:0xb7332bbc ... >
 new_energy.to_s                       #=> "360.0 MJ"
 
@@ -223,6 +223,11 @@ A quantity with arbitrary cancelable units can be cancelled manually:
     quantity.to_s                         #=> "746496.0 m^4"
 
 Note: there are more comprehensive and flexible methods for manupulating compound units available as part of of the class Unit::Compound. These can be used to convert a conpound unit into the precise form required. If such an approach is used, any quantity object can be converted to the new form by simply passing the new unit object into the Quantity#to method.
+
+Custom Unit Configuration
+-------------------------
+
+By default, Quantify loads a host of useful units to get you started quickly. However, this comprehensiveness comes at a significant performance cost. If you know what dimensions, units, and conversions your application needs, just create your own  config file (you may want to copy `lib/quantify/config.rb`) and tweak it. Then, instead of `require 'quantify'`, use `require 'quantify-custom'` and `require 'path/to/my/custom/config.rb'`.
 
 Contributing
 ============
