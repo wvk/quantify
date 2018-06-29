@@ -11,7 +11,15 @@ module Quantify
       # into the system of known units. See initialize for details of options
       #
       def self.load(options=nil,&block)
-        self.new(options,&block).load
+        self.new(options, &block).load
+      end
+
+      def self.load_yaml(yaml_string)
+        require 'yaml'
+
+        YAML.load(yaml_string).each do |name, hsh|
+          load hsh.merge(name: name.dup)
+        end
       end
 
       def self.construct_and_load(unit,&block)
