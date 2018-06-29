@@ -3,7 +3,7 @@ module Quantify
   module Unit
     module Prefix
       class Base
-        
+
         def self.load(options)
           if options.is_a? Hash
             Prefix.prefixes << self.new(options)
@@ -18,8 +18,8 @@ module Quantify
 
         def initialize(options)
           @symbol = options[:symbol].remove_underscores
+          @name   = options[:name].remove_underscores.downcase
           @factor = options[:factor].to_f
-          @name = options[:name].remove_underscores.downcase
         end
 
         def is_si_prefix?
@@ -27,7 +27,7 @@ module Quantify
         end
 
         def is_non_si_prefix?
-          self.is_a?(NonSI)
+          self.is_a? NonSI
         end
 
         def label

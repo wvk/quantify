@@ -2,7 +2,7 @@
 module Quantify
   module Unit
     module Prefix
-  
+
       attr_accessor :prefixes
 
       @prefixes = []
@@ -27,7 +27,7 @@ module Quantify
 
       def self.prefixes
         @prefixes
-      end    
+      end
 
       def self.for(name_or_symbol)
         return name_or_symbol.clone if name_or_symbol.is_a? Quantify::Unit::Prefix::Base
@@ -59,6 +59,7 @@ module Quantify
         @non_si_prefixes
       end
 
+      # never really needed, just for user convenience
       def self.method_missing(method, *args, &block)
         if method.to_s =~ /((si|non_si)_)?prefixes(_by_(name|symbol|label))?/
           if $2

@@ -256,41 +256,41 @@ module Quantify
     end
 
     def add!(other)
-      add_or_subtract!(:+, other)
+      add_or_subtract!(:'+', other)
     end
 
     def subtract!(other)
-      add_or_subtract!(:-, other)
+      add_or_subtract!(:'-', other)
     end
 
     def multiply!(other)
-      multiply_or_divide!(:*, other)
+      multiply_or_divide!(:'*', other)
     end
 
     def divide!(other)
-      multiply_or_divide!(:/, other)
+      multiply_or_divide!(:'/', other)
     end
 
     def add(other)
       Quantity.new(@value,@unit).add!(other)
     end
-    alias :+ :add
+    alias :'+' :add
 
     def subtract(other)
       Quantity.new(@value,@unit).subtract!(other)
     end
-    alias :- :subtract
+    alias :'-' :subtract
 
     def multiply(other)
       Quantity.new(@value,@unit).multiply!(other)
     end
     alias :times :multiply
-    alias :* :multiply
+    alias :'*' :multiply
 
     def divide(other)
       Quantity.new(@value,@unit).divide!(other)
     end
-    alias :/ :divide
+    alias :'/' :divide
 
     def pow(power)
       Quantity.new(@value,@unit).pow!(power)
@@ -388,7 +388,7 @@ module Quantify
 
     def multiply_or_divide!(operator,other)
       if other.kind_of? Numeric
-        raise ZeroDivisionError if (other.to_f == 0.0 && operator == :/)
+        raise ZeroDivisionError if (other.to_f == 0.0 && operator == :'/')
         @value = @value.send(operator,other)
 
         return self
@@ -471,7 +471,10 @@ module Quantify
     #
     def method_missing(method, *args, &block)
       if method.to_s =~ /(to_)(.*)/
-        to($2)
+        self.class.define_method method do
+          to($2)
+        end
+        send method
       else
         super
       end

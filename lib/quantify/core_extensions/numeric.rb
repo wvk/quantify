@@ -10,9 +10,13 @@ class Numeric
   #
   def method_missing(method, *args, &block)
     return super if (method == :to_str || method == :to_ary || method == :to_hash)
-    begin
-      Quantify::Quantity.new self, method.to_s
-    rescue Exception
+
+    if unit = Unit.exist?(method)
+      self.class.define_method method do
+        Quantify::Quantity.new self, unit
+      end
+      send method
+    else
       super
     end
   end

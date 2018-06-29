@@ -4,7 +4,7 @@ module Quantify
   module Unit
 
     extend ExtendedMethods
-    
+
     # The Unit module contains functionality for defining and handling
     # representations of physical units.
     #
@@ -19,24 +19,24 @@ module Quantify
     # prefixes specified in config.rb. New units can be defined (with or without
     # prefixes) at any time and either used in place or loaded into the known
     # system.
-    
+
     NUMBER_REGEX            = /([\d\s.,]+)/i
-      
+
     UNIT_DENOMINATOR_REGEX  = /(\/|per)/i
-      
+
     ORDINAL_SUFFIXES_REGEX  = /(st|nd|rd|th)\b/i
-        
+
     UNIT_PREFIX_TERMS_REGEX = /\A(square|cubic)\b/i
-    
+
     INDEX_REGEX             = /\^?([\d\.-]*)/
 
     WORD_WITH_INDEX_REGEX   = /([^\d\s.,\^]+)#{INDEX_REGEX}?/i
 
     UNIT_SUFFIX_TERMS_REGEX = /\A(squared|cubed|to the \d+(#{ORDINAL_SUFFIXES_REGEX}) power)\b/i
-    
+
     QUANTITY_REGEX          = /#{Unit::NUMBER_REGEX}(#{Quantify::Unit::WORD_WITH_INDEX_REGEX})/i
-    
-    
+
+
     class << self
       attr_reader :units, :unit_names, :unit_symbols
       attr_reader :prefixed_units, :prefixed_unit_names, :prefixed_unit_symbols
@@ -146,7 +146,7 @@ module Quantify
     #
     def self.use_superscript_characters=(true_or_false)
       unless true_or_false == true || true_or_false == false
-        raise Exceptions::InvalidArgumentError, "Argument must be true or false" 
+        raise Exceptions::InvalidArgumentError, "Argument must be true or false"
       end
 
       @use_superscript_characters = true_or_false
@@ -174,7 +174,7 @@ module Quantify
     # Remove a unit from the system of known units
     def self.unload(*unloaded_units)
       [unloaded_units].flatten.each do |unloaded_unit|
-        unloaded_unit = Unit.for(unloaded_unit) 
+        unloaded_unit = Unit.for(unloaded_unit)
 
         @units.delete(unloaded_unit.label)
 
@@ -235,50 +235,44 @@ module Quantify
     # based on the initialized Unit for :metre and Prefix :centi.
     #
     def self.for(unit_descriptor)
-      if unit_descriptor.is_a? Unit::Base
-        return unit_descriptor.clone 
-      end
+      self.exist?(unit_descriptor) or raise Exceptions::InvalidUnitError, "Unit '#{unit_descriptor}' not known"
+    end
 
-      if unit_descriptor.nil? || ( unit_descriptor.is_a?(String) && unit_descriptor.empty? )
-        return nil 
-      end
-
-      unless unit_descriptor.is_a?(String) || unit_descriptor.is_a?(Symbol)
-        raise Exceptions::InvalidArgumentError, "Argument must be a Symbol or String"
-      end
-      
-      if unit = Unit.match(unit_descriptor)
-        return unit
-      elsif unit = Unit.parse(unit_descriptor)
-        return unit
-      elsif unit = Unit.parse(unit_descriptor, :iterative => true)
-        return unit
+    def self.exist?(unit_descriptor)
+      case unit_descriptor
+      when Unit::Base
+        return unit_descriptor.clone
+      when nil, ''
+        return nil
+      when Symbol, String
+        # OK, continue
       else
-        raise Exceptions::InvalidUnitError, "Unit '#{unit_descriptor}' not known"
+        raise Exceptions::InvalidArgumentError, "Argument must be a Symbol or String (is: #{unit_descriptor.class})"
       end
 
+      Unit.match(unit_descriptor) or Unit.parse(unit_descriptor) or Unit.parse(unit_descriptor, :iterative => true)
     end
 
     def self.match(unit)
       return unit.clone if unit.is_a? Unit::Base
 
-      Unit.match_known_unit(unit) || Unit.match_prefixed_variant(unit) 
+      Unit.match_known_unit(unit) or Unit.match_prefixed_variant(unit)
     end
-    
+
     # Parse complex strings into unit.
     #
     def self.parse(string, options={})
       string = string.remove_underscores.without_superscript_characters
 
       if options[:iterative] == true
-        units = Unit.iterative_parse(string, options) 
+        units = Unit.iterative_parse(string, options)
         units, remainder = units if options[:remainder] == true
       else
         units = Unit.simple_parse(string)
       end
 
       if units.empty?
-        units = nil 
+        units = nil
       elsif units.size == 1 && units.first.index == 1
         units = units.first.unit
       else
@@ -287,7 +281,7 @@ module Quantify
 
       options[:iterative] == true && options[:remainder] == true ? [units, remainder] : units
     end
-    
+
     # This returns the suite of units which represents THE SI units for each of
     # the base dimensions, i.e. metre, kilogram, second, etc. but not prefixed
     # versions of the same unit
@@ -295,7 +289,7 @@ module Quantify
     def self.base_quantity_si_units
       @units.values.select {|unit| unit.is_base_quantity_si_unit? }
     end
-    
+
     # This can be replicated by method missing approach, but explicit method provided
     # given importance in #match (and #for) methods regexen
     #
@@ -316,9 +310,9 @@ module Quantify
     def self.non_si_non_prefixed_units
       @units.values.select {|unit| unit.is_non_si_unit? && !unit.is_prefixed_unit? }
     end
-    
+
     protected
-    
+
     def self.match_known_unit(unit_descriptor)
 
       descriptor = Unit.format_unit_attribute(:label, unit_descriptor).to_sym
@@ -344,7 +338,7 @@ module Quantify
     rescue
       nil
     end
-    
+
     def self.match_prefixed_variant(unit_descriptor)
       [:label, :symbol, :name, :j_science].each do |attribute|
         formatted_descriptor = Unit.format_unit_attribute(attribute, unit_descriptor)
@@ -358,7 +352,7 @@ module Quantify
     rescue
       nil
     end
-    
+
     def self.simple_parse(string)
       if string.scan(UNIT_DENOMINATOR_REGEX).size > 1
         raise Exceptions::InvalidArgumentError, "Malformed unit: multiple uses of '/' or 'per'"
@@ -372,18 +366,18 @@ module Quantify
 
       return units
     end
-    
+
     def self.iterative_parse(string, options={})
       units = []
 
       is_denominator   = false
       current_exponent = nil
-      
+
       while term = string.starts_with_valid_unit_term? do
 
         if term =~ /^#{UNIT_PREFIX_TERMS_REGEX}$/
           current_exponent = Unit.exponent_term_to_number(term)
-        elsif term =~ /^#{UNIT_SUFFIX_TERMS_REGEX}$/ 
+        elsif term =~ /^#{UNIT_SUFFIX_TERMS_REGEX}$/
           units.last.index *= Unit.exponent_term_to_number(term) unless units.empty?
         elsif term =~ /^#{UNIT_DENOMINATOR_REGEX}/
           is_denominator = true
@@ -396,7 +390,7 @@ module Quantify
           end
 
           unit.index *= current_exponent if current_exponent
-          
+
           units << unit
           current_exponent = nil
         end
@@ -408,22 +402,22 @@ module Quantify
 
       options[:remainder] == true ? [units, string]: units
     end
-    
+
     def self.parse_unit_and_index(string)
       string.scan(WORD_WITH_INDEX_REGEX)
-      
+
       index = ($2.nil? || $2.empty? ? 1 : $2.to_i)
       unit  = Unit.match($1.to_s)
 
       if unit.is_a? Compound
-        unit.base_units.each do |base_unit| 
+        unit.base_units.each do |base_unit|
           base_unit.index = base_unit.index * index
         end
       else
         CompoundBaseUnit.new($1.to_s, index)
       end
     end
-    
+
     def self.parse_numerator_units(string)
       # If no middot then units parsed by whitespace
       # Need to escape multi-word units with underscores
@@ -438,14 +432,14 @@ module Quantify
         Unit.parse_unit_and_index(substring)
       end.flatten
     end
-    
+
     def self.parse_denominator_units(string)
       Unit.parse_numerator_units(string).map do |unit|
         unit.index *= -1
         unit
       end
     end
-  
+
     # standardize query strings or symbols into canonical form for unit names,
     # symbols and labels
     #
@@ -459,22 +453,22 @@ module Quantify
       Unit.use_superscript_characters? ?
         unit_descriptor.with_superscript_characters : unit_descriptor.without_superscript_characters
     end
-    
+
     # Return a list of unit names which are multi-word
     def self.multi_word_unit_names
       Unit.unit_names.keys.map { |name| name if name.word_count > 1 }.compact
     end
-    
+
     # Return a list of pluralised unit names which are multi-word
     def self.multi_word_unit_pluralized_names
       multi_word_unit_names.map { |name| name.pluralize }
     end
-    
+
     # Return a list of unit symbols which are multi-word
     def self.multi_word_unit_symbols
       Unit.unit_symbols.keys.map { |symbol| symbol if symbol.word_count > 1 }.compact
     end
-    
+
     # Underscore any parts of string which represent multi-word unit identifiers
     # so that units can be parsed on whitespace
     #
@@ -488,33 +482,33 @@ module Quantify
 
       string
     end
-    
+
     def self.exponent_term_to_number(term)
       return 2 if /square(d)?/i.match(term)
       return 3 if /cub(ic|ed)/i.match(term)
     end
-    
+
     # Returns a list of "|" separated unit identifiers for use as regex
-    # alternatives. Lists are constructed by calling 
+    # alternatives. Lists are constructed by calling
     def self.terms_for_regex(klass,method,attribute)
 
       # Don't include the unity unit as it has blank name/symbol
-      list = klass.send(method).map do |item| 
+      list = klass.send(method).map do |item|
         item.send(attribute).to_s.gsub("/","\\/").gsub("^","\\^") unless item.label == :unity
       end.compact
 
       list.map! { |item| item.downcase } if attribute == :name
       list.sort { |x, y| y.size <=> x.size }.join("|")
     end
-    
+
     def self.unit_label_regex
       @unit_label_regex ||= /(#{Unit.terms_for_regex(Unit::Prefix,:prefixes,:label)})??((#{Unit.terms_for_regex(Unit,:non_prefixed_units,:label)})\b)/
     end
-    
+
     def self.unit_symbol_regex
       @unit_symbol_regex ||= /(#{Unit.terms_for_regex(Unit::Prefix,:prefixes,:symbol)})??((#{Unit.terms_for_regex(Unit,:non_prefixed_units,:symbol)})\b)/
     end
-    
+
     def self.unit_name_regex
       # Specifically case insensitive
       # Double '?' (i.e. '??') makes prefix matching lazy, e.g. "centimetres of mercury" is matched fully rather than as 'centimetres'
@@ -524,7 +518,7 @@ module Quantify
     def self.unit_j_science_regex
       @unit_j_science_regex ||= /(#{Unit.terms_for_regex(Unit::Prefix,:prefixes,:j_science)})??((#{Unit.terms_for_regex(Unit,:non_prefixed_units,:j_science)})\b)/
     end
-    
-    
+
+
   end
 end

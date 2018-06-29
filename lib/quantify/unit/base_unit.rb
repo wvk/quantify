@@ -492,7 +492,7 @@ module Quantify
         end
         Unit::Compound.new(*options)
       end
-      alias :/ :divide
+      alias :'/' :divide
 
       # Raise a unit to a power. This results in the generation of a compound
       # unit, e.g. m^3.
@@ -600,11 +600,18 @@ module Quantify
       #
       def method_missing(method, *args, &block)
         if method.to_s =~ /(to_)(.*)/ && prefix = Prefix.for($2.to_sym)
-          return self.with_prefix(prefix)
+          self.class.define_method method do
+            self.with_prefix(prefix)
+          end
         elsif method.to_s =~ /(alternatives_by_)(.*)/ && self.respond_to?($2.to_sym)
-          return self.alternatives($2.to_sym)
+          self.class.define_method method do
+            return self.alternatives($2.to_sym)
+          end
+        else
+          return super
         end
-        super
+
+        send method
       end
 
     end
