@@ -250,7 +250,7 @@ module Quantify
         raise Exceptions::InvalidArgumentError, "Argument must be a Symbol or String (is: #{unit_descriptor.class})"
       end
 
-      Unit.match(unit_descriptor) or Unit.parse(unit_descriptor) or Unit.parse(unit_descriptor, :iterative => true)
+      Unit.match(unit_descriptor) or Unit.parse(unit_descriptor) or Unit.parse(unit_descriptor, :iterative => true) rescue false
     end
 
     def self.match(unit)
@@ -413,8 +413,10 @@ module Quantify
         unit.base_units.each do |base_unit|
           base_unit.index = base_unit.index * index
         end
-      else
+      elsif Unit.match($1.to_s)
         CompoundBaseUnit.new($1.to_s, index)
+      else
+        nil
       end
     end
 

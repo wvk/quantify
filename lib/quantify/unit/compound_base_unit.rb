@@ -16,7 +16,7 @@ module Quantify
       def initialize(unit,index=1)
         @unit = Unit.match(unit)
 
-        raise Exceptions::InvalidUnitError, "Base unit not known: #{unit}"      if @unit.nil?
+        raise Exceptions::InvalidUnitError, "Base unit not known: `#{unit}'"    if @unit.nil?
         raise Exceptions::InvalidUnitError, "Base unit cannot be compound unit" if @unit.is_a? Compound
 
         @index = index
@@ -78,7 +78,7 @@ module Quantify
       def is_base_unit?
         @unit.is_base_unit?
       end
-      
+
       def is_benchmark_unit?
         @unit.is_benchmark_unit?
       end
@@ -86,7 +86,7 @@ module Quantify
       def is_si_unit?
         @unit.is_si_unit?
       end
-      
+
       def is_non_si_unit?
         @unit.is_non_si_unit?
       end
