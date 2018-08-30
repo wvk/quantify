@@ -379,10 +379,10 @@ module Quantify
 
           return self
         else
-          raise Quantify::Exceptions::InvalidObjectError, "Cannot add or subtract Quantities with different dimensions"
+          raise Quantify::Exceptions::InvalidObjectError, "Cannot add or subtract Quantities with different dimensions: #{self} #{operator} #{other}"
         end
       else
-        raise Quantify::Exceptions::InvalidObjectError, "Cannot add or subtract non-Quantity objects"
+        raise Quantify::Exceptions::InvalidObjectError, "Cannot add or subtract non-Quantity objects #{self} #{operator} #{other}"
       end
     end
 
@@ -398,14 +398,14 @@ module Quantify
         @value = @value.nil? ? nil : @value.send(operator, other.value)
 
         return self
-      elsif other.kind_of? Unit
+      elsif other.kind_of? Unit::Base
         @unit = @unit.send(operator, other).or_equivalent
         @unit.consolidate_base_units! if @unit.is_compound_unit? && Quantity.auto_consolidate_units?
         @value = @value.nil? ? nil : @value
 
         return self
       else
-        raise Quantify::Exceptions::InvalidArgumentError, "Cannot multiply or divide a Quantity by a non-Quantity or non-Numeric object: #{other.inspect}"
+        raise Quantify::Exceptions::InvalidArgumentError, "Cannot multiply or divide a Quantity by a non-(Quantity, Numeric, or Unit) object: #{other.inspect}"
       end
     end
 
@@ -469,22 +469,23 @@ module Quantify
       end
     end
 
-    # Dynamic method for converting to another unit, e.g
-    #
-    #   2.ft.to_metre.to_s                           #=> "0.6096 m"
-    #
-    #   30.degree_celsius.to_K.to_s :name            #=> "303.15 kelvins"
-    #
-    def method_missing(method, *args, &block)
-      if method.to_s =~ /(to_)(.*)/
-        self.class.define_method method do
-          to($2)
-        end
-        send method
-      else
-        super
-      end
-    end
+#     # Dynamic method for converting to another unit, e.g
+#     #
+#     #   2.ft.to_metre.to_s                           #=> "0.6096 m"
+#     #
+#     #   30.degree_celsius.to_K.to_s :name            #=> "303.15 kelvins"
+#     #
+#     def method_missing(method, *args, &block)
+#       super if %w(to_str to_hash).include? method.to_s
+#       if method.to_s =~ /(to_)(.*)/
+#         self.class.define_method method do
+#           to($2)
+#         end
+#         send method
+#       else
+#         super
+#       end
+#     end
 
   end
 end
