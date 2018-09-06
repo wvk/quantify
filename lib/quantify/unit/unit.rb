@@ -311,6 +311,20 @@ module Quantify
       @units.values.select {|unit| unit.is_non_si_unit? && !unit.is_prefixed_unit? }
     end
 
+    def self.with_conversion_rates(rates, &block)
+      previous_values = {}
+
+      rates.each do |unit, factor|
+        previous_values[unit] = @units[unit]
+        self.unload unit
+        self.load previous_values[unit].dup.tap {|s| s.factor = factor }
+      end
+
+      yield
+    ensure
+      previous_values.each {|k, v| @units[k] = v }
+    end
+
     protected
 
     def self.match_known_unit(unit_descriptor)
